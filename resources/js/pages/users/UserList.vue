@@ -33,14 +33,19 @@
     });
     
     // create user
-    const createUser = (values, { resetForm }) => {
+    const createUser = (values, { resetForm, setErrors }) => {
         //console.log(values);
         axios.post('/api/users', values)
         .then((response) => {
             users.value.unshift(response.data);           
             $('#userFormModal').modal('hide');
             resetForm();
-        })
+        }).catch((error) => {
+            if (error.response.data.errors){
+                setErrors(error.response.data.errors);
+            }
+            
+        });
     }
 
     const addUser = () => {
@@ -60,7 +65,7 @@
         };
     }
 
-    const updateUser = (values) => {
+    const updateUser = (values, { setErrors }) => {
         //console.log(values);
 
         axios.put('/api/users/' + formValues.value.id, values)
@@ -69,18 +74,18 @@
                 users.value[index] = response.data;
                 $('#userFormModal').modal('hide');
             }).catch((error) => {
+                setErrors(error.response.data.errors);
                 console.log(error);
-            }).finally(() => {
-                form.value.resetForm();
             });
     }
 
-    const handleSubmit = (values) => {
+    const handleSubmit = (values, actions) => {
         if (editing.value) {
-            updateUser(values);
+            updateUser(values, actions);
         }
         else{
-            createUser(values);
+            console.log(actions);
+            createUser(values, actions);
         }
     }
 
