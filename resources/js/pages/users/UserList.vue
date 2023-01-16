@@ -5,27 +5,83 @@
     import * as yup from 'yup'; 
 
     const users = ref([]);
+    const editing = ref(false);
+    const formValues = ref();
+    const form = ref(null);
 
+    // get list of users
     const getUsers = () => {
         axios.get('/api/users').then( (response) => {
             users.value = response.data;
         })
     }
 
-    const schema = yup.object({
+    // validation create user
+    const createUserSchema = yup.object({
         name: yup.string().required(),
         email: yup.string().email().required(),
         password: yup.string().required().min(8),
     });
+
+    // validation edit user
+    const editUserSchema = yup.object({
+        name: yup.string().required(),
+        email: yup.string().email().required(),
+        password: yup.string().when((password, schema) => {
+            return password ? schema.required().min(8) : schema;
+        }),
+    });
     
+    // create user
     const createUser = (values, { resetForm }) => {
         //console.log(values);
         axios.post('/api/users', values)
         .then((response) => {
             users.value.unshift(response.data);           
-            $('#createUserModal').modal('hide');
+            $('#userFormModal').modal('hide');
             resetForm();
         })
+    }
+
+    const addUser = () => {
+        editing.value = false;
+        $('#userFormModal').modal('show');
+    }
+
+    const editUser = (user) => {
+        //console.log(user);
+        editing.value = true;
+        form.value.resetForm();             // why ".value", because we use ref()
+        $('#userFormModal').modal('show');
+        formValues.value = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+        };
+    }
+
+    const updateUser = (values) => {
+        //console.log(values);
+
+        axios.put('/api/users/' + formValues.value.id, values)
+            .then((response) => {
+                const index = users.value.findIndex(user => user.id === response.data.id);
+                users.value[index] = response.data;
+                $('#userFormModal').modal('hide');
+            }).catch((error) => {
+                console.log(error);
+            }).finally(() => {
+                form.value.resetForm();
+            });
+    }
+
+    const handleSubmit = (values) => {
+        if (editing.value) {
+            updateUser(values);
+        }
+        else{
+            createUser(values);
+        }
     }
 
     onMounted(() => {
@@ -55,7 +111,7 @@
     <div class="content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between">
-                <button type="button" class="mb-2 btn btn-primary" data-toggle="modal" data-target="#createUserModal">
+                <button type="button" class="mb-2 btn btn-primary" @click="addUser">
                     Add new user
                 </button>                
             </div>
@@ -80,7 +136,7 @@
                                 <td>-</td>
                                 <td>-</td>
                                 <td>
-                                    <a href="#"><i class="fa fa-edit"></i></a>
+                                    <a href="#" @click.prevent="editUser(user)"><i class="fa fa-edit"></i></a>
                                     <a href="#"
                                         ><i
                                             class="fa fa-trash text-danger ml-2"
@@ -96,17 +152,20 @@
     </div>
 
     <!-- Modal -->
-    <div class="modal fade" id="createUserModal" data-backdrop="static" tabindex="-1" role="dialog"
-        aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal fade" id="userFormModal" data-backdrop="static" tabindex="-1" role="dialog"
+        aria-labelledby="userFormModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="createUserModalLabel">Add New User</h5>
+                    <h5 class="modal-title" id="userFormModalLabel">
+                        <span v-if="editing">Edit user</span>
+                        <span v-else>Add new user</span>
+                    </h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <Form @submit="createUser" :validation-schema="schema" v-slot="{ errors }">
+                <Form ref="form" @submit="handleSubmit" :validation-schema="editing ? editUserSchema : createUserSchema" v-slot="{ errors }" :initial-values="formValues">
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="name">Name</label>
