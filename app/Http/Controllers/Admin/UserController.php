@@ -10,7 +10,21 @@ class UserController extends Controller
 {
     public function index()
     {
-        return User::latest()->get();
+        $users = User::latest()->get();
+        return $users;
+
+        /*
+        return User::latest()->get()->map(function ($user) {
+            //dd($user->created_at->toFormattedDate());
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                //'created_at' => $user->created_at->format(config('app.date_format')),
+                'created_at' => $user->created_at->toFormattedDate(),
+            ];
+        });
+        */
     }
 
     public function store()
@@ -18,7 +32,7 @@ class UserController extends Controller
         request()->validate([
             'name' => 'required',
             'email' => 'required|unique:users,email',
-            'password' => 'required|min8'
+            'password' => 'required|min:8'
         ]);
 
         return User::create([
@@ -31,7 +45,7 @@ class UserController extends Controller
     public function update(User $user)
     {
         request()->validate([
-            'name' => request('name'),
+            'name' => 'required',
             'email' => 'required|unique:users,email,' . $user->id,
             'password' => 'sometimes|min:8'
         ]);

@@ -4,6 +4,7 @@
     import { Form, Field } from 'vee-validate';
     import * as yup from 'yup';
     import { useToastr } from '../../toastr.js';
+    import { formatDate } from '../../helper.js'
 
     const toastr = useToastr();
     const users = ref([]);
@@ -157,7 +158,7 @@
                                 <td>{{ index + 1 }}</td>
                                 <td>{{ user.name }}</td>
                                 <td>{{ user.email }}</td>
-                                <td>-</td>
+                                <td>{{ formatDate(user.created_at) }}</td>
                                 <td>-</td>
                                 <td>
                                     <a href="#" @click.prevent="editUser(user)"><i class="fa fa-edit"></i></a>
