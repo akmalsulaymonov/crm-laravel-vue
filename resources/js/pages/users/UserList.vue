@@ -1,20 +1,22 @@
 <script setup>
     import axios from 'axios';
-    import { ref, onMounted, reactive } from 'vue';
+    import { ref, onMounted, reactive, watch } from 'vue';
     import { Form, Field, useResetForm } from 'vee-validate';
     import * as yup from 'yup';
     import { useToastr } from '../../toastr.js';
     import UserListItem from './UserListItem.vue';
+    import { debounce } from 'lodash';
+    import { Bootstrap4Pagination } from 'laravel-vue-pagination';
 
     const toastr = useToastr();
-    const users = ref([]);
+    const users = ref({'data': []});
     const editing = ref(false);
     const formValues = ref();
     const form = ref(null);
 
     // get list of users
-    const getUsers = () => {
-        axios.get('/api/users').then( (response) => {
+    const getUsers = (page = 1) => {
+        axios.get(`/api/users?page=${page}`).then( (response) => {
             users.value = response.data;
         })
     }
@@ -97,11 +99,30 @@
     const userDeleted = (userId) => {
         users.value = users.value.filter(user => user.id !== userId);
     };
-    
+
+    const searchQuery = ref(null);
+
+    const search = () => {
+        axios.get('/api/users/search', {
+            params: {
+                query: searchQuery.value
+            }
+        })
+        .then(response => {
+            users.value = response.data;
+        })
+        .catch(error => {
+            console.log(error);
+        })
+    }
+
+    watch(searchQuery, debounce(() => {
+        search();
+    }, 300));
 
     onMounted(() => {
         getUsers();
-    })
+    });
 
 </script>
 
@@ -128,7 +149,10 @@
             <div class="d-flex justify-content-between">
                 <button type="button" class="mb-2 btn btn-primary" @click="addUser">
                     Add new user
-                </button>                
+                </button>
+                <div>
+                    <input type="text" v-model="searchQuery" class="form-control" placeholder="Search..." />
+                </div>      
             </div>
             <div class="card">
                 <div class="card-body">
@@ -143,8 +167,8 @@
                                 <th>Options</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <UserListItem v-for="(user, index) in users" 
+                        <tbody v-if="users.data.length > 0">
+                            <UserListItem v-for="(user, index) in users.data" 
                                 :key="user.id" 
                                 :user=user
                                 :index=index 
@@ -152,9 +176,15 @@
                                 @user-deleted="userDeleted"
                             />
                         </tbody>
+                        <tbody v-else>
+                            <tr>
+                                <td colspan="6" class="text-center">No result found...</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
+            <Bootstrap4Pagination :data="users" @pagination-change-page="getUsers" />
         </div>
     </div>
 

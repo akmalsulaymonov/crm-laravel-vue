@@ -29,10 +29,6 @@
             });
     }
 
-    const editUser = (user) => {
-        emit('editUser', user);
-    }
-
     const roles = ref([
         {
             name: 'ADMIN',
