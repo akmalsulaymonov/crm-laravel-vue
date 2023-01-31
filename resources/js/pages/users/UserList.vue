@@ -18,6 +18,8 @@
     const getUsers = (page = 1) => {
         axios.get(`/api/users?page=${page}`).then( (response) => {
             users.value = response.data;
+            selectedUsers.value = [];
+            selectAll.value = false;
         })
     }
 
@@ -42,15 +44,15 @@
         //console.log(values);
         axios.post('/api/users', values)
         .then((response) => {
-            users.value.unshift(response.data);           
+            users.value.data.unshift(response.data);           
             $('#userFormModal').modal('hide');
             resetForm();
             toastr.info('User created successfully!');
         }).catch((error) => {
-            if (error.response.data.errors){
+            //console.log(error);
+            if (error.response.data.errors) {
                 setErrors(error.response.data.errors);
             }
-            
         });
     }
 
@@ -73,16 +75,15 @@
 
     const updateUser = (values, { setErrors }) => {
         //console.log(values);
-
         axios.put('/api/users/' + formValues.value.id, values)
             .then((response) => {
-                const index = users.value.findIndex(user => user.id === response.data.id);
-                users.value[index] = response.data;
+                const index = users.value.data.findIndex(user => user.id === response.data.id);
+                users.value.data[index] = response.data;
                 $('#userFormModal').modal('hide');
                 toastr.info('User updated successfully!');
             }).catch((error) => {
                 setErrors(error.response.data.errors);
-                console.log(error);
+                //console.log(error);
             });
     }
 
@@ -97,7 +98,7 @@
     }
 
     const userDeleted = (userId) => {
-        users.value = users.value.filter(user => user.id !== userId);
+        users.value.data = users.value.data.filter(user => user.id !== userId);
     };
 
     const searchQuery = ref(null);
@@ -113,6 +114,44 @@
         })
         .catch(error => {
             console.log(error);
+        })
+    }
+
+    const selectedUsers = ref([]);
+
+    const toggleSelection = (user) => {
+        const index = selectedUsers.value.indexOf(user.id);
+        if(index === -1) {
+            selectedUsers.value.push(user.id);
+        } else{
+            selectedUsers.value.splice(index, 1);
+        }
+
+        console.log(selectedUsers.value);
+    }
+
+    const selectAll = ref(false);
+    
+    const selectAllUsers = () => {
+        if(selectAll.value){
+            selectedUsers.value = users.value.data.map(user => user.id);
+        } else{
+            selectedUsers.value = [];
+        }
+        console.log(selectedUsers.value);
+    }
+
+    const bulkDelete = () => {
+        axios.delete('/api/users', {
+            data: {
+                ids: selectedUsers.value
+            }
+        })
+        .then(response => {
+            users.value.data = users.value.data.filter(user => !selectedUsers.value.includes(user.id));
+            selectedUsers.value = [];
+            selectAll.value = false; 
+            toastr.success(response.data.message);
         })
     }
 
@@ -147,9 +186,14 @@
     <div class="content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between">
-                <button type="button" class="mb-2 btn btn-primary" @click="addUser">
-                    Add new user
-                </button>
+                <div>
+                    <button type="button" class="mb-2 btn btn-primary" @click="addUser">
+                        Add new user
+                    </button>
+                    <button v-if="selectedUsers.length > 0" type="button" class="ml-2 mb-2 btn btn-danger" @click="bulkDelete">
+                        Delete selected
+                    </button>
+                </div>
                 <div>
                     <input type="text" v-model="searchQuery" class="form-control" placeholder="Search..." />
                 </div>      
@@ -159,6 +203,7 @@
                     <table class="table table-bordered">
                         <thead>
                             <tr>
+                                <th><input type="checkbox" @change="selectAllUsers" v-model="selectAll" /></th>
                                 <th style="width: 10px">#</th>
                                 <th>Name</th>
                                 <th>Email</th>
@@ -174,6 +219,8 @@
                                 :index=index 
                                 @edit-user="editUser"
                                 @user-deleted="userDeleted"
+                                @toggle-selection="toggleSelection"
+                                :select-all="selectAll"
                             />
                         </tbody>
                         <tbody v-else>
