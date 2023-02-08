@@ -47,7 +47,7 @@
             users.value.data.unshift(response.data);           
             $('#userFormModal').modal('hide');
             resetForm();
-            toastr.info('User created successfully!');
+            toastr.success('User created successfully!');
         }).catch((error) => {
             //console.log(error);
             if (error.response.data.errors) {
@@ -186,13 +186,16 @@
     <div class="content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between">
-                <div>
-                    <button type="button" class="mb-2 btn btn-primary" @click="addUser">
-                        Add new user
+                <div class="d-flex">
+                    <button @click="addUser" type="button" class="mb-2 btn btn-primary">
+                        <i class="fa fa-plus-circle mr-1"></i> Add new user
                     </button>
-                    <button v-if="selectedUsers.length > 0" type="button" class="ml-2 mb-2 btn btn-danger" @click="bulkDelete">
-                        Delete selected
-                    </button>
+                    <div v-if="selectedUsers.length > 0">
+                        <button v-if="selectedUsers.length > 0" type="button" class="ml-2 mb-2 btn btn-danger" @click="bulkDelete">
+                            <i class="fa fa-trash mr-1"></i> Delete selected
+                        </button>
+                        <span class="ml-2">Selected {{ selectedUsers.length }} users</span>
+                    </div>
                 </div>
                 <div>
                     <input type="text" v-model="searchQuery" class="form-control" placeholder="Search..." />
