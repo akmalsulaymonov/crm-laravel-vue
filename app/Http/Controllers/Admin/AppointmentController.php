@@ -15,7 +15,7 @@ class AppointmentController extends Controller
 
         return Appointment::query()
             ->with('client')
-            ->when(request('status'), function ($query){
+            ->when(request('status'), function ($query) {
                 return $query->where('status', AppointmentStatus::from(request('status')));
             })
             ->latest()
@@ -30,5 +30,20 @@ class AppointmentController extends Controller
                 ],
                 'client' => $appointment->client,
             ]);
+    }
+
+    public function getStatusWithCount()
+    {
+        $cases = AppointmentStatus::cases();
+        //dd($cases);
+
+        return collect($cases)->map(function ($status) {
+            return [
+                'name' => $status->name,
+                'value' => $status->value,
+                'count' => Appointment::where('status', $status->value)->count(),
+                'color' => AppointmentStatus::from($status->value)->color(),
+            ];
+        });
     }
 }
