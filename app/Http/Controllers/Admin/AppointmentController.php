@@ -46,4 +46,18 @@ class AppointmentController extends Controller
             ];
         });
     }
+
+    public function store()
+    {
+        Appointment::create([
+            'title' => request('title'),
+            'client_id' => 1,
+            'start_time' => now(),
+            'end_time' => now(),
+            'description' => request('description'),
+            'status' => AppointmentStatus::SCHEDULED,
+        ]);
+
+        return response()->json(['message' => 'success']);
+    }
 }
