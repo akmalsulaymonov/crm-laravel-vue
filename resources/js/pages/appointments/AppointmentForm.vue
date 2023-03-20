@@ -1,10 +1,12 @@
 <script setup>
 
 import axios from 'axios';
-import { reactive } from 'vue';
+import { reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToastr } from '../../toastr.js';
 import { Form } from 'vee-validate';
+import flatpicker from 'flatpickr';
+import 'flatpickr/dist/themes/light.css';
 
 const toastr = useToastr();
 const router = useRouter();
@@ -12,8 +14,8 @@ const router = useRouter();
 const form = reactive({
     title: '',
     client_id: '',
-    start_date: '',
     start_time: '',
+    end_time: '',
     description: '',
 });
 
@@ -27,6 +29,13 @@ const handleSubmit = (values, actions) => {
             actions.setErrors(error.response.data.errors)
         });
 }
+
+onMounted(() => {
+    flatpicker(".flatpickr", {
+        enableTime: true,
+        dateFormat: "Y-m-d h:i K"
+    })
+})
 
 </script>
 
@@ -87,14 +96,27 @@ const handleSubmit = (values, actions) => {
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label for="date">Appointment Date</label>
-                                            <input type="date" class="form-control" id="date">
+                                            <label for="start-time">Start Time</label>
+                                            <input 
+                                                v-model="form.start_time"
+                                                type="text" 
+                                                class="form-control flatpickr" 
+                                                id="start-time" 
+                                                :class="{'is-invalid': errors.start_time}"
+                                            >
+                                            <span class="invalid-feedback">{{ errors.start_time  }}</span>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="form-group">
-                                            <label for="time">Appointment Time</label>
-                                            <input type="time" class="form-control" id="time">
+                                            <label for="end-time">End Time</label>
+                                            <input 
+                                                v-model="form.end_time"    
+                                                type="text" 
+                                                class="form-control flatpickr" 
+                                                id="end-time" 
+                                                :class="{'is-invalid': errors.end_time}">
+                                            <span class="invalid-feedback">{{ errors.end_time }}</span>
                                         </div>
                                     </div>
                                 </div>

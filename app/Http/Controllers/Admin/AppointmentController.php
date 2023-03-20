@@ -49,17 +49,20 @@ class AppointmentController extends Controller
 
     public function store()
     {
-        request()->validate([
+        $validated = request()->validate([
             'title' => 'required',
             'description' => 'required',
+            'start_time' => 'required',
+            'end_time' => 'required',
+
         ]);
 
         Appointment::create([
-            'title' => request('title'),
+            'title' => $validated['title'],
             'client_id' => 1,
-            'start_time' => now(),
-            'end_time' => now(),
-            'description' => request('description'),
+            'start_time' => $validated['start_time'],
+            'end_time' => $validated['end_time'],
+            'description' => $validated['description'],
             'status' => AppointmentStatus::SCHEDULED,
         ]);
 
