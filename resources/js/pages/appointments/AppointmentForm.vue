@@ -1,7 +1,7 @@
 <script setup>
 
 import axios from 'axios';
-import { reactive, onMounted } from 'vue';
+import { reactive, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToastr } from '../../toastr.js';
 import { Form } from 'vee-validate';
@@ -30,11 +30,21 @@ const handleSubmit = (values, actions) => {
         });
 }
 
+const clients = ref();
+const getClients = () => {
+    axios.get('/api/clients')
+    .then((response) => {
+        clients.value = response.data;
+    })
+} 
+
 onMounted(() => {
     flatpicker(".flatpickr", {
         enableTime: true,
-        dateFormat: "Y-m-d h:i K"
-    })
+        dateFormat: "Y-m-d h:i K",
+        defaultHour: 8,
+    });
+    getClients();
 })
 
 </script>
@@ -86,10 +96,15 @@ onMounted(() => {
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="client">Client Name</label>
-                                            <select id="client" class="form-control">
-                                                <option>Client One</option>
-                                                <option>Client Two</option>
+                                            <select 
+                                                id="client" 
+                                                class="form-control" 
+                                                v-model="form.client_id" 
+                                                :class="{'is-invalid': errors.client_id}"
+                                            >
+                                                <option v-for="client in clients" :key="client.id" :value="client.id">{{ client.first_name }} {{ client.last_name }}</option>
                                             </select>
+                                            <span class="invalid-feedback">{{ errors.client_id  }}</span>
                                         </div>
                                     </div>
                                 </div>
