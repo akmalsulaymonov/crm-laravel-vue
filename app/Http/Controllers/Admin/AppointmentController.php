@@ -14,7 +14,7 @@ class AppointmentController extends Controller
         //dd(request('status'));
 
         return Appointment::query()
-            ->with('client')
+            ->with('client:id,first_name,last_name')
             ->when(request('status'), function ($query) {
                 return $query->where('status', AppointmentStatus::from(request('status')));
             })
@@ -67,6 +67,28 @@ class AppointmentController extends Controller
             'description' => $validated['description'],
             'status' => AppointmentStatus::SCHEDULED,
         ]);
+
+        return response()->json(['message' => 'success']);
+    }
+
+    public function edit(Appointment $appointment)
+    {
+        return $appointment;
+    }
+
+    public function update(Appointment $appointment)
+    {
+        $validated = request()->validate([
+            'client_id' => 'required',
+            'title' => 'required',
+            'description' => 'required',
+            'start_time' => 'required',
+            'end_time' => 'required',
+        ], [
+            'client_id.required' => 'The client name field is required!'
+        ]);
+
+        $appointment->update($validated);
 
         return response()->json(['message' => 'success']);
     }
