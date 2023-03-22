@@ -1,6 +1,7 @@
 <script setup>
     import { onMounted, ref, computed } from 'vue';
     import axios from 'axios';
+    import Swal from 'sweetalert2'
 
     /*
     const appointmentStatus = {
@@ -42,6 +43,31 @@
     const totalAppointments = computed(() => {
         return appointmentStatus.value.map(status => status.count).reduce((acc, value) => acc + value, 0);
     })
+
+    const deleteAppointment = (id) => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+            if (result.isConfirmed) {
+                axios.delete(`/api/appointment/${id}`)
+                .then((response) => {
+                    appointments.value.data = appointments.value.data.filter(appointment => appointment.id !== id);
+                    Swal.fire(
+                    'Deleted!',
+                    'Appointment has been deleted successfully',
+                    'success'
+                    )
+                });
+                
+            }
+            })
+    }
 
     onMounted(() => {
         getAppointments();
@@ -115,7 +141,7 @@
                                                 <i class="fa fa-edit mr-2"></i>
                                             </router-link>
 
-                                            <a href="">
+                                            <a href="#" @click.prevent="deleteAppointment(appointment.id)">
                                                 <i class="fa fa-trash text-danger"></i>
                                             </a>
                                         </td>
