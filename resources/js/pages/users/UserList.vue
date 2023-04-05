@@ -16,7 +16,11 @@
 
     // get list of users
     const getUsers = (page = 1) => {
-        axios.get(`/api/users?page=${page}`).then( (response) => {
+        axios.get(`/api/users?page=${page}`, {
+            params: {
+                query: searchQuery.value
+            }
+        }).then( (response) => {
             users.value = response.data;
             selectedUsers.value = [];
             selectAll.value = false;
@@ -99,20 +103,6 @@
 
     const searchQuery = ref(null);
 
-    const search = () => {
-        axios.get('/api/users/search', {
-            params: {
-                query: searchQuery.value
-            }
-        })
-        .then(response => {
-            users.value = response.data;
-        })
-        .catch(error => {
-            console.log(error);
-        })
-    }
-
     const selectedUsers = ref([]);
 
     const toggleSelection = (user) => {
@@ -168,7 +158,7 @@
     }
 
     watch(searchQuery, debounce(() => {
-        search();
+        getUsers();
     }, 300));
 
     onMounted(() => {
